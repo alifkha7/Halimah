@@ -106,6 +106,9 @@ function initScene() {
   // Build room
   buildRoom();
 
+  // Petal particles (for bouquet interaction)
+  initPetals();
+
   // Events
   window.addEventListener('resize', onResize);
   renderer.domElement.addEventListener('mousedown', onMouseDown);
@@ -166,6 +169,7 @@ function buildRoom() {
   createRug();
   createFairyLights();
   createWallDecor();
+  createFlowerBouquet();
 }
 
 
@@ -872,6 +876,280 @@ function createRug() {
   scene.add(rug);
 }
 
+// ============ FLOWER BOUQUET ON DESK ============
+let petalParticles = [];
+let petalAnimating = false;
+
+function createFlowerBouquet() {
+  const group = new THREE.Group();
+
+  // === WRAPPING PAPER (multiple layered sheets fanning out, peach/blush) ===
+  const wrapColor = new THREE.MeshStandardMaterial({ color: 0xfde8e0, side: THREE.DoubleSide, roughness: 0.8 });
+  const wrapColor2 = new THREE.MeshStandardMaterial({ color: 0xfff0ea, side: THREE.DoubleSide, roughness: 0.8 });
+
+  // Fan-shaped wrapping sheets (like the photo - multiple paper layers fanning outward)
+  const sheetAngles = [-0.6, -0.35, -0.1, 0.15, 0.4, 0.65];
+  sheetAngles.forEach((angle, i) => {
+    const sheetGeo = new THREE.PlaneGeometry(0.14, 0.28);
+    const mat = i % 2 === 0 ? wrapColor : wrapColor2;
+    const sheet = new THREE.Mesh(sheetGeo, mat);
+    sheet.position.set(0, 0.05, 0);
+    sheet.rotation.z = angle;
+    sheet.rotation.x = -0.15 + (Math.random() - 0.5) * 0.1;
+    // Fan them slightly in Y to give depth
+    sheet.position.x = Math.sin(angle) * 0.02;
+    sheet.position.y = 0.08 + Math.abs(angle) * 0.02;
+    group.add(sheet);
+  });
+
+  // Inner wrapping (slightly smaller, lighter)
+  const innerWrapMat = new THREE.MeshStandardMaterial({ color: 0xfff5f2, side: THREE.DoubleSide, roughness: 0.7 });
+  for (let i = 0; i < 4; i++) {
+    const angle = -0.4 + i * 0.25;
+    const innerSheet = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.22), innerWrapMat);
+    innerSheet.position.set(Math.sin(angle) * 0.01, 0.07, 0.01);
+    innerSheet.rotation.z = angle;
+    group.add(innerSheet);
+  }
+
+  // === TULLE / MESH FABRIC (white sparkly netting at the bottom) ===
+  const tulleMat = new THREE.MeshStandardMaterial({ 
+    color: 0xf0f0ff, transparent: true, opacity: 0.5, 
+    side: THREE.DoubleSide, roughness: 0.3, metalness: 0.1 
+  });
+  // Tulle gathered at bottom
+  const tulle1 = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.12), tulleMat);
+  tulle1.position.set(0, -0.06, 0.02);
+  tulle1.rotation.z = 0.1;
+  group.add(tulle1);
+  const tulle2 = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.1), tulleMat);
+  tulle2.position.set(0.02, -0.05, -0.01);
+  tulle2.rotation.z = -0.15;
+  group.add(tulle2);
+
+  // === RIBBON BOW (cream/gold satin bow at the tie point) ===
+  const ribbonMat = new THREE.MeshStandardMaterial({ color: 0xfff3c4, roughness: 0.4 });
+  // Bow loops (two torus halves)
+  const bowLoop1 = new THREE.Mesh(new THREE.TorusGeometry(0.03, 0.008, 8, 12, Math.PI), ribbonMat);
+  bowLoop1.position.set(-0.02, -0.02, 0.03);
+  bowLoop1.rotation.z = 0.5;
+  group.add(bowLoop1);
+  const bowLoop2 = new THREE.Mesh(new THREE.TorusGeometry(0.03, 0.008, 8, 12, Math.PI), ribbonMat);
+  bowLoop2.position.set(0.02, -0.02, 0.03);
+  bowLoop2.rotation.z = -0.5;
+  bowLoop2.rotation.y = Math.PI;
+  group.add(bowLoop2);
+  // Bow center knot
+  const bowKnot = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), ribbonMat);
+  bowKnot.position.set(0, -0.02, 0.035);
+  group.add(bowKnot);
+  // Ribbon tails hanging down
+  const tail1 = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.06, 0.005), ribbonMat);
+  tail1.position.set(-0.015, -0.06, 0.03);
+  tail1.rotation.z = 0.2;
+  group.add(tail1);
+  const tail2 = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.055, 0.005), ribbonMat);
+  tail2.position.set(0.015, -0.055, 0.03);
+  tail2.rotation.z = -0.25;
+  group.add(tail2);
+
+  // === FLOWERS (pink roses, lavender, white small flowers, daisy) ===
+
+  // Pink roses (main flowers - larger spheres with layered look)
+  const rosePink = new THREE.MeshStandardMaterial({ color: 0xe91e63, roughness: 0.6 });
+  const rosePinkLight = new THREE.MeshStandardMaterial({ color: 0xf06292, roughness: 0.6 });
+  
+  // Rose 1 (large, deep pink)
+  const rose1 = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 12), rosePink);
+  rose1.position.set(-0.03, 0.14, 0.02);
+  group.add(rose1);
+  // Petal layers around rose
+  for (let p = 0; p < 5; p++) {
+    const petal = new THREE.Mesh(new THREE.SphereGeometry(0.015, 6, 6), rosePinkLight);
+    const a = (p / 5) * Math.PI * 2;
+    petal.position.set(-0.03 + Math.cos(a) * 0.03, 0.14, 0.02 + Math.sin(a) * 0.03);
+    petal.scale.set(1.2, 0.5, 1);
+    group.add(petal);
+  }
+
+  // Rose 2 (medium, hot pink)
+  const rose2 = new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 12), rosePink);
+  rose2.position.set(0.04, 0.12, 0.01);
+  group.add(rose2);
+
+  // Rose 3 (smaller, lighter pink)
+  const rose3 = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 10), rosePinkLight);
+  rose3.position.set(-0.05, 0.1, -0.01);
+  group.add(rose3);
+
+  // Lavender/purple flower (like ranunculus in the photo)
+  const lavenderMat = new THREE.MeshStandardMaterial({ color: 0xce93d8, roughness: 0.5 });
+  const lavender1 = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 10), lavenderMat);
+  lavender1.position.set(0.02, 0.16, -0.01);
+  group.add(lavender1);
+  // Yellow center
+  const lavCenter = new THREE.Mesh(new THREE.SphereGeometry(0.01, 8, 8), new THREE.MeshStandardMaterial({ color: 0xfdd835 }));
+  lavCenter.position.set(0.02, 0.18, -0.01);
+  group.add(lavCenter);
+
+  // Light purple daisy-like flower
+  const daisyMat = new THREE.MeshStandardMaterial({ color: 0xb39ddb, roughness: 0.6 });
+  const daisy = new THREE.Mesh(new THREE.SphereGeometry(0.028, 10, 10), daisyMat);
+  daisy.position.set(-0.01, 0.17, 0.03);
+  group.add(daisy);
+  // Daisy petals (flat discs around)
+  for (let p = 0; p < 6; p++) {
+    const dp = new THREE.Mesh(new THREE.CircleGeometry(0.012, 6), new THREE.MeshStandardMaterial({ color: 0xd1c4e9, side: THREE.DoubleSide }));
+    const a = (p / 6) * Math.PI * 2;
+    dp.position.set(-0.01 + Math.cos(a) * 0.025, 0.17, 0.03 + Math.sin(a) * 0.025);
+    dp.rotation.x = -Math.PI / 2 + (Math.random() - 0.5) * 0.3;
+    group.add(dp);
+  }
+
+  // White small flowers (hydrangea-like cluster)
+  const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf5f5ff, roughness: 0.5 });
+  for (let i = 0; i < 7; i++) {
+    const wf = new THREE.Mesh(new THREE.SphereGeometry(0.012 + Math.random() * 0.006, 6, 6), whiteMat);
+    wf.position.set(
+      0.03 + (Math.random() - 0.5) * 0.04,
+      0.15 + Math.random() * 0.03,
+      0.02 + (Math.random() - 0.5) * 0.03
+    );
+    group.add(wf);
+  }
+
+  // Light blue/white small flowers (like in the photo)
+  const blueMat = new THREE.MeshStandardMaterial({ color: 0xbbdefb, roughness: 0.5 });
+  for (let i = 0; i < 5; i++) {
+    const bf = new THREE.Mesh(new THREE.SphereGeometry(0.01 + Math.random() * 0.005, 6, 6), blueMat);
+    bf.position.set(
+      0.05 + (Math.random() - 0.5) * 0.03,
+      0.13 + Math.random() * 0.03,
+      0.0 + (Math.random() - 0.5) * 0.03
+    );
+    group.add(bf);
+  }
+
+  // === LEAVES (green accents poking out between flowers) ===
+  const leafMat = new THREE.MeshStandardMaterial({ color: 0x4caf50, side: THREE.DoubleSide });
+  const leafDarkMat = new THREE.MeshStandardMaterial({ color: 0x388e3c, side: THREE.DoubleSide });
+  
+  for (let i = 0; i < 6; i++) {
+    const lGeo = new THREE.PlaneGeometry(0.02, 0.05);
+    const lMat = i % 2 === 0 ? leafMat : leafDarkMat;
+    const leaf = new THREE.Mesh(lGeo, lMat);
+    const angle = (i / 6) * Math.PI * 2;
+    leaf.position.set(
+      Math.cos(angle) * 0.06,
+      0.14 + Math.random() * 0.04,
+      Math.sin(angle) * 0.04
+    );
+    leaf.rotation.z = angle + Math.PI / 2;
+    leaf.rotation.x = (Math.random() - 0.5) * 0.5;
+    group.add(leaf);
+  }
+
+  // === POSITION: Laid down (tergeletak) on desk, right side panel area ===
+  group.position.set(-2.0, 0.93, -2.3);
+  // Rotate so it lays flat on the desk surface, slightly angled
+  group.rotation.x = -Math.PI / 2 + 0.05; // Lay flat (flowers face up)
+  group.rotation.z = 0.3; // Angled on desk
+  group.userData = { type: 'bouquet', tooltip: '💐 Click for a special message' };
+  scene.add(group);
+  interactiveObjects.push(group);
+}
+
+// ============ PETAL PARTICLE SYSTEM ============
+let petals = [];
+let petalGroup = null;
+
+function initPetals() {
+  petalGroup = new THREE.Group();
+  petalGroup.visible = false;
+  scene.add(petalGroup);
+}
+
+function spawnPetals() {
+  // Clear old petals
+  while (petalGroup.children.length > 0) {
+    const child = petalGroup.children[0];
+    child.geometry.dispose();
+    child.material.dispose();
+    petalGroup.remove(child);
+  }
+  petals = [];
+
+  petalGroup.visible = true;
+  petalAnimating = true;
+
+  const petalColors = [0xf8bbd0, 0xfce4ec, 0xf48fb1, 0xffcdd2, 0xffffff, 0xe91e63];
+  const origin = new THREE.Vector3(-2.0, 1.3, -2.3); // Above the bouquet on desk
+
+  for (let i = 0; i < 30; i++) {
+    const geo = new THREE.PlaneGeometry(0.03 + Math.random() * 0.02, 0.04 + Math.random() * 0.02);
+    const mat = new THREE.MeshStandardMaterial({
+      color: petalColors[Math.floor(Math.random() * petalColors.length)],
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 1
+    });
+    const petal = new THREE.Mesh(geo, mat);
+    petal.position.copy(origin);
+    petal.position.x += (Math.random() - 0.5) * 0.3;
+    petal.position.z += (Math.random() - 0.5) * 0.3;
+    petal.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+
+    petal.userData = {
+      velocity: new THREE.Vector3(
+        (Math.random() - 0.5) * 0.02,
+        0.01 + Math.random() * 0.015,
+        (Math.random() - 0.5) * 0.02
+      ),
+      rotSpeed: new THREE.Vector3(
+        (Math.random() - 0.5) * 0.08,
+        (Math.random() - 0.5) * 0.08,
+        (Math.random() - 0.5) * 0.08
+      ),
+      life: 1.0,
+      decay: 0.003 + Math.random() * 0.004
+    };
+
+    petalGroup.add(petal);
+    petals.push(petal);
+  }
+}
+
+function updatePetals() {
+  if (!petalAnimating || petals.length === 0) return;
+
+  let allDead = true;
+  petals.forEach(petal => {
+    const d = petal.userData;
+    if (d.life <= 0) return;
+
+    allDead = false;
+    // Move upward then float down
+    d.velocity.y -= 0.0004; // gravity
+    petal.position.add(d.velocity);
+    petal.rotation.x += d.rotSpeed.x;
+    petal.rotation.y += d.rotSpeed.y;
+    petal.rotation.z += d.rotSpeed.z;
+
+    // Fade out
+    d.life -= d.decay;
+    petal.material.opacity = Math.max(0, d.life);
+
+    if (d.life <= 0) {
+      petal.visible = false;
+    }
+  });
+
+  if (allDead) {
+    petalAnimating = false;
+    petalGroup.visible = false;
+  }
+}
+
 // ============ CAMERA VIEWS ============
 const cameraViews = {
   overview: { pos: [0, 2.5, 5.5], target: [0, 1.5, 0] },
@@ -1005,6 +1283,7 @@ function handleInteraction(type) {
     case 'standing-lamp': toggleLamp('standing-lamp-light', 0.4); break;
     case 'nightstand-lamp': toggleLamp('nightstand-lamp-light', 0.3); break;
     case 'desk-lamp': toggleLamp('desk-lamp-light', 0.6); break;
+    case 'bouquet': openBouquetModal(); break;
   }
 }
 
@@ -1500,6 +1779,16 @@ function openModal(id) {
   controls.enabled = false;
 }
 
+// ============ BOUQUET INTERACTION ============
+function openBouquetModal() {
+  // Spawn petal particles
+  spawnPetals();
+  // Open the bouquet modal after a short delay for dramatic effect
+  setTimeout(() => {
+    openModal('modal-bouquet');
+  }, 600);
+}
+
 function closeAllModals() {
   document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
   controls.enabled = true;
@@ -1587,6 +1876,7 @@ document.getElementById('spotify-play').addEventListener('click', () => {
 function animate() {
   requestAnimationFrame(animate);
   controls.update();
+  updatePetals();
   renderer.render(scene, camera);
 }
 

@@ -331,6 +331,16 @@
       .menu-banner .menu-art { font-size: 3.5rem; }
       .modal-box { width: 95%; }
     }
+
+    /* Bouquet modal animations */
+    @keyframes bouquetBounce {
+      from { transform: translateY(0) rotate(-5deg); }
+      to { transform: translateY(-8px) rotate(5deg); }
+    }
+    @keyframes petalFloat {
+      0%, 100% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      50% { transform: translateY(-10px) rotate(15deg); opacity: 0.7; }
+    }
   </style>
 </head>
 <body>
@@ -570,23 +580,27 @@
       <div class="notebook-spread">
         <div class="notebook-page left-page">
           <div class="notebook-ruled"></div>
-          <h3 class="nb-title">Congratulations on your graduation, Halimah! ✨</h3>
-          <p class="nb-date">May 13, 2026</p>
-          <p class="nb-text">You did it! Cheers to your success! 🎓</p>
-          <p class="nb-text">No more deadlines, no more stress, just happiness and success!</p>
-          <p class="nb-text">Best wishes for your future, Halimah!</p>
+          <h3 class="nb-title">Your</h3>
+          <div class="nb-photo-grid">
+            <img src="assets/images/halimahrch_-20260514-0001_019.jpg" alt="Memory">
+            <img src="assets/images/halimahrch_-20260514-0001_039.jpg" alt="Memory">
+            <img src="assets/images/halimahrch_-20260514-0001_085.jpg" alt="Memory">
+            <img src="assets/images/halimahrch_-20260514-0001_109.jpg" alt="Memory">
+            <img src="assets/images/halimahrch_-20260514-0001_134.jpg" alt="Memory">
+            <img src="assets/images/halimahrch_-20260514-0001_005.jpg" alt="Memory">
+          </div>
         </div>
         <div class="notebook-spine-div"></div>
         <div class="notebook-page right-page">
           <div class="notebook-ruled"></div>
-          <h3 class="nb-title">Your Memories 📸</h3>
+          <h3 class="nb-title">Memories 📸</h3>
           <div class="nb-photo-grid">
-            <img src="assets/images/halimahrch_-20260514-0001_007.jpg" alt="Memory">
-            <img src="assets/images/halimahrch_-20260514-0001_023.jpg" alt="Memory">
-            <img src="assets/images/halimahrch_-20260514-0001_056.jpg" alt="Memory">
-            <img src="assets/images/halimahrch_-20260514-0001_089.jpg" alt="Memory">
-            <img src="assets/images/halimahrch_-20260514-0001_112.jpg" alt="Memory">
-            <img src="assets/images/halimahrch_-20260514-0001_135.jpg" alt="Memory">
+            <img src="assets/images/halimahrch_-20260514-0001_059.jpg" alt="Memory">
+            <img src="assets/images/halimahrch_-20260514-0001_081.jpg" alt="Memory">
+            <img src="assets/images/halimahrch_-20260514-0001_025.jpg" alt="Memory">
+            <img src="assets/images/halimahrch_-20260514-0001_102.jpg" alt="Memory">
+            <img src="assets/images/halimahrch_-20260514-0001_107.jpg" alt="Memory">
+            <img src="assets/images/halimahrch_-20260514-0001_026.jpg" alt="Memory">
           </div>
         </div>
       </div>
@@ -625,13 +639,13 @@
 
   <div class="modal-overlay hidden" id="modal-calendar">
     <div class="modal-box">
-      <div class="modal-head"><span>📅 Hari Spesial</span><button class="modal-close">&times;</button></div>
+      <div class="modal-head"><span>📅 Special Day</span><button class="modal-close">&times;</button></div>
       <div class="modal-body">
         <div class="cal-display">
           <div class="cal-month">GRADUATION DAY</div>
           <div class="cal-grid">
             <table>
-              <tr><th>MIN</th><th>SEN</th><th>SEL</th><th>RAB</th><th>KAM</th><th>JUM</th><th>SAB</th></tr>
+              <tr><th>SUN</th><th>MON</th><th>TUE</th><th>WED</th><th>THU</th><th>FRI</th><th>SAT</th></tr>
               <tr><td></td><td></td><td></td><td></td><td></td><td>1</td><td>2</td></tr>
               <tr><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td></tr>
               <tr><td>10</td><td>11</td><td>12</td><td class="highlight">13</td><td>14</td><td>15</td><td>16</td></tr>
@@ -642,6 +656,34 @@
           </div>
         </div>
         <p class="cal-note">🎓 The day all your hard work paid off. Congratulations, Halimah!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bouquet Modal -->
+  <div class="modal-overlay hidden" id="modal-bouquet">
+    <div class="modal-box" style="max-width:480px;background:linear-gradient(135deg, #1a0a1e 0%, #2d1035 100%);border:1px solid rgba(233,30,99,0.3);">
+      <div class="modal-head" style="background:linear-gradient(135deg, #e91e63, #f06292);">
+        <span>May 13, 2026</span>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body" style="text-align:center;padding:30px 24px;">
+        <div style="font-size:3rem;margin-bottom:16px;animation:bouquetBounce 1s ease infinite alternate;">💐</div>
+        <h3 style="font-family:'Fredoka One',cursive;font-size:1.2rem;color:#f8bbd0;margin-bottom:12px;">Congratulations on your graduation, Halimah!</h3>
+        <p style="color:#e0b0c0;line-height:1.8;font-size:0.95rem;margin-bottom:16px;">
+          You did it! Cheers to your success! 🎓<br>
+          No more deadlines, no more stress, just happiness and success!<br>
+        </p>
+        <p style="color:#f48fb1;font-size:0.85rem;font-style:italic;">
+          Best wishes for your future, Halimah!
+        </p>
+        <div style="margin-top:20px;display:flex;gap:8px;justify-content:center;font-size:1.5rem;">
+          <span style="animation:petalFloat 2s ease-in-out infinite;animation-delay:0s;">🌸</span>
+          <span style="animation:petalFloat 2s ease-in-out infinite;animation-delay:0.3s;">🌷</span>
+          <span style="animation:petalFloat 2s ease-in-out infinite;animation-delay:0.6s;">🌹</span>
+          <span style="animation:petalFloat 2s ease-in-out infinite;animation-delay:0.9s;">🌺</span>
+          <span style="animation:petalFloat 2s ease-in-out infinite;animation-delay:1.2s;">🌼</span>
+        </div>
       </div>
     </div>
   </div>
