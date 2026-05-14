@@ -1,0 +1,209 @@
+/* ============================================
+   macOS-style Laptop Interface
+   ============================================ */
+
+/* Laptop Overlay */
+.laptop-overlay {
+  position: fixed; inset: 0; z-index: 90;
+  background: #0d1b2a; display: none;
+  align-items: center; justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', 'Nunito', sans-serif;
+}
+.laptop-overlay.active { display: flex; }
+
+.laptop-close {
+  position: absolute; top: 12px; right: 16px; z-index: 100;
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+  color: #fff; width: 32px; height: 32px; border-radius: 50%;
+  font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.laptop-close:hover { background: rgba(255,80,80,0.5); }
+
+/* macOS Window */
+.macos-window {
+  width: 88vw; max-width: 900px; height: 75vh; max-height: 550px;
+  background: #1c1c1e; border-radius: 12px; overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  display: flex; flex-direction: column;
+  position: relative;
+}
+
+/* Menu Bar */
+.macos-menubar {
+  height: 24px; background: rgba(30,30,30,0.95);
+  display: flex; align-items: center; padding: 0 12px;
+  font-size: 11px; color: #fff; gap: 14px;
+  border-bottom: 1px solid #333;
+  flex-shrink: 0;
+}
+.menubar-app { font-weight: 700; }
+.menubar-item { opacity: 0.7; }
+.menubar-time { margin-left: auto; opacity: 0.7; }
+
+/* Desktop */
+.macos-desktop {
+  flex: 1; position: relative; overflow: hidden;
+  background: linear-gradient(135deg, #667eea 0%, #e06b9e 30%, #f093a0 50%, #f5c778 70%, #7ecbf5 100%);
+}
+
+/* Dock */
+.macos-dock {
+  position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+  background: rgba(255,255,255,0.15); backdrop-filter: blur(20px);
+  border-radius: 16px; padding: 6px 12px;
+  display: flex; gap: 8px; align-items: center;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.dock-icon {
+  width: 44px; height: 44px; border-radius: 10px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; transition: all 0.2s; position: relative;
+}
+.dock-icon svg {
+  width: 36px; height: 36px; border-radius: 8px;
+}
+.dock-icon:hover { transform: scale(1.3) translateY(-8px); }
+.dock-icon .dock-label {
+  position: absolute; top: -24px; left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,0.8); color: #fff; padding: 2px 8px;
+  border-radius: 4px; font-size: 9px; white-space: nowrap;
+  opacity: 0; transition: opacity 0.2s; pointer-events: none;
+}
+.dock-icon:hover .dock-label { opacity: 1; }
+
+/* App Windows (inside desktop) */
+.app-window {
+  position: absolute; inset: 0; display: none;
+  flex-direction: column; background: #1c1c1e;
+  animation: appOpen 0.3s ease;
+}
+.app-window.active { display: flex; }
+@keyframes appOpen { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* App Header (traffic lights + title) */
+.app-header {
+  height: 36px; background: #2a2a2c; display: flex; align-items: center;
+  padding: 0 12px; gap: 8px; flex-shrink: 0; border-bottom: 1px solid #3a3a3c;
+}
+.traffic-lights { display: flex; gap: 6px; }
+.traffic-light {
+  width: 10px; height: 10px; border-radius: 50%; cursor: pointer;
+}
+.tl-red { background: #ff5f57; }
+.tl-yellow { background: #febc2e; }
+.tl-green { background: #28c840; }
+.app-title { font-size: 12px; color: #999; margin-left: 8px; font-weight: 600; }
+.app-tabs { display: flex; gap: 12px; margin-left: auto; font-size: 11px; }
+.app-tab { color: #888; cursor: pointer; padding: 2px 8px; border-radius: 4px; }
+.app-tab.active { background: #0a84ff; color: #fff; }
+
+/* ============ PHOTOS APP ============ */
+.photos-app { background: #1c1c1e; }
+.photos-sidebar {
+  width: 160px; background: #252527; padding: 12px;
+  border-right: 1px solid #3a3a3c; font-size: 11px; color: #999;
+  flex-shrink: 0;
+}
+.photos-sidebar h4 { color: #666; font-size: 10px; margin: 12px 0 6px; text-transform: uppercase; }
+.photos-sidebar-item { padding: 4px 8px; border-radius: 4px; cursor: pointer; margin-bottom: 2px; color: #ccc; }
+.photos-sidebar-item.active { background: #0a84ff; color: #fff; }
+
+.photos-content { flex: 1; display: flex; flex-direction: column; }
+.photos-date { padding: 12px 16px; font-size: 18px; font-weight: 700; color: #fff; }
+.photos-date span { font-size: 11px; color: #888; font-weight: 400; margin-left: 8px; }
+.photos-grid {
+  flex: 1; padding: 0 16px 16px; display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 4px; overflow-y: auto;
+}
+.photos-grid img {
+  width: 100%; height: 100px; object-fit: cover; border-radius: 4px;
+  cursor: pointer; transition: all 0.2s;
+}
+.photos-grid img:hover { opacity: 0.8; transform: scale(1.02); }
+
+/* Photo Viewer */
+.photo-viewer {
+  position: absolute; inset: 0; background: #000;
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 5;
+}
+.photo-viewer.active { display: flex; }
+.photo-viewer img { max-width: 90%; max-height: 70%; object-fit: contain; border-radius: 4px; }
+.photo-viewer-header {
+  position: absolute; top: 0; left: 0; width: 100%;
+  padding: 8px 12px; display: flex; justify-content: space-between; align-items: center;
+  background: linear-gradient(180deg, rgba(0,0,0,0.6), transparent);
+}
+.photo-viewer-info { font-size: 11px; color: #ccc; text-align: center; }
+.photo-viewer-nav {
+  position: absolute; top: 50%; width: 32px; height: 32px;
+  background: rgba(255,255,255,0.15); border: none; color: #fff;
+  border-radius: 50%; cursor: pointer; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+}
+.photo-viewer-nav:hover { background: rgba(255,255,255,0.3); }
+.photo-viewer-nav.prev { left: 12px; transform: translateY(-50%); }
+.photo-viewer-nav.next { right: 12px; transform: translateY(-50%); }
+
+/* ============ SPOTIFY APP ============ */
+.spotify-app { background: #121212; color: #fff; }
+.spotify-layout { display: flex; flex: 1; overflow: hidden; }
+.spotify-sidebar {
+  width: 180px; background: #000; padding: 16px;
+  border-right: 1px solid #282828; font-size: 12px;
+  flex-shrink: 0; overflow-y: auto;
+}
+.spotify-sidebar h4 { color: #888; font-size: 10px; margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+.spotify-sidebar-item { padding: 6px 0; color: #b3b3b3; cursor: pointer; }
+.spotify-sidebar-item:hover { color: #fff; }
+.spotify-sidebar-item.active { color: #fff; font-weight: 700; }
+
+.spotify-main { flex: 1; overflow-y: auto; }
+.spotify-hero {
+  padding: 20px; display: flex; align-items: center; gap: 16px;
+  background: linear-gradient(180deg, rgba(29,185,84,0.3), #121212);
+}
+.spotify-cover {
+  width: 100px; height: 100px; background: #333; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center; font-size: 2.5rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+.spotify-album-info h2 { font-size: 1.5rem; margin-bottom: 4px; }
+.spotify-album-info p { font-size: 11px; color: #888; }
+.spotify-actions { display: flex; gap: 12px; align-items: center; margin-top: 8px; }
+.spotify-play-btn {
+  width: 40px; height: 40px; background: #1db954; border: none;
+  border-radius: 50%; color: #000; font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.spotify-play-btn:hover { transform: scale(1.05); background: #1ed760; }
+.spotify-follow-btn {
+  background: none; border: 1px solid #fff; color: #fff;
+  padding: 4px 14px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer;
+}
+
+.spotify-tracklist { padding: 0 20px 20px; }
+.spotify-track-header {
+  display: flex; padding: 8px 0; border-bottom: 1px solid #282828;
+  font-size: 10px; color: #888; text-transform: uppercase;
+}
+.spotify-track-row {
+  display: flex; align-items: center; padding: 8px 0;
+  border-bottom: 1px solid #1a1a1a; cursor: pointer; border-radius: 4px;
+  transition: background 0.2s;
+}
+.spotify-track-row:hover { background: #282828; }
+.track-num { width: 30px; color: #888; font-size: 12px; }
+.track-play { width: 20px; color: #888; font-size: 10px; }
+.track-name { flex: 1; font-size: 13px; font-weight: 500; }
+.track-duration { color: #888; font-size: 12px; }
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 600px) {
+  .macos-window { width: 95vw; height: 80vh; }
+  .photos-sidebar, .spotify-sidebar { display: none; }
+  .dock-icon { width: 32px; height: 32px; font-size: 18px; }
+  .photos-grid { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
+  .photos-grid img { height: 70px; }
+}

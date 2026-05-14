@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Halimah's Graduation Room - 3D Experience</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><polygon points='32,8 4,24 32,40 60,24' fill='%23333'/><rect x='28' y='40' width='8' height='12' fill='%23f5cd30'/><polygon points='20,52 44,52 48,56 16,56' fill='%23333'/><line x1='52' y1='24' x2='52' y2='48' stroke='%23f5cd30' stroke-width='2'/><circle cx='52' cy='50' r='3' fill='%23f5cd30'/></svg>" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/laptop.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      overflow: hidden; 
+      font-family: 'Nunito', sans-serif; 
+      background: #0a0a0f;
+      color: #fff;
+      cursor: default;
+    }
+    #canvas-container { width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; }
+    canvas { display: block; }
+
+    /* ===== MAIN MENU ===== */
+    #main-menu {
+      position: fixed; inset: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 100%);
+    }
+    #main-menu.hidden { display: none; }
+    .menu-container {
+      display: flex; gap: 40px; align-items: center;
+      max-width: 900px; width: 90%; flex-wrap: wrap; justify-content: center;
+    }
+    .menu-banner {
+      flex: 1; min-width: 280px; text-align: center;
+    }
+    .menu-banner h1 {
+      font-family: 'Fredoka One', cursive;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      color: #fff;
+      text-shadow: 0 0 20px rgba(138, 43, 226, 0.5);
+      margin-bottom: 8px;
+    }
+    .menu-banner p {
+      color: #888; font-size: 0.9rem; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .menu-banner .menu-art {
+      font-size: 5rem; margin: 20px 0;
+      filter: drop-shadow(0 0 20px rgba(138, 43, 226, 0.4));
+    }
+    .menu-panel {
+      background: rgba(20, 10, 40, 0.9);
+      border: 1px solid rgba(138, 43, 226, 0.3);
+      border-radius: 12px; padding: 24px;
+      min-width: 250px; backdrop-filter: blur(10px);
+    }
+    .menu-panel h2 {
+      font-family: 'Fredoka One', cursive;
+      font-size: 1rem; color: #fff;
+      padding: 8px 16px; margin: -24px -24px 16px;
+      background: linear-gradient(135deg, #7b2ff7, #9b59b6);
+      border-radius: 12px 12px 0 0;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .menu-btn {
+      display: block; width: 100%; padding: 12px 16px;
+      margin-bottom: 8px; background: rgba(138, 43, 226, 0.1);
+      border: 1px solid rgba(138, 43, 226, 0.2);
+      border-radius: 8px; color: #ddd; font-size: 0.9rem;
+      font-weight: 700; cursor: pointer; text-align: left;
+      transition: all 0.2s ease; font-family: 'Nunito', sans-serif;
+    }
+    .menu-btn:hover {
+      background: rgba(138, 43, 226, 0.3);
+      border-color: #7b2ff7; color: #fff;
+      transform: translateX(4px);
+    }
+    .menu-btn.primary {
+      background: linear-gradient(135deg, #7b2ff7, #9b59b6);
+      border: none; color: #fff; text-align: center;
+      font-family: 'Fredoka One', cursive; font-size: 1rem;
+    }
+    .menu-btn.primary:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(123, 47, 247, 0.4); }
+    .menu-hint {
+      margin-top: 12px; font-size: 0.7rem; color: #555;
+      text-align: center; font-style: italic;
+    }
+
+    /* ===== LOADING SCREEN ===== */
+    #loading-screen {
+      position: fixed; inset: 0; z-index: 200;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: #0a0a0f;
+    }
+    #loading-screen.hidden { opacity: 0; pointer-events: none; transition: opacity 0.8s; }
+    .load-title { font-family: 'Fredoka One', cursive; font-size: 1.8rem; margin-bottom: 4px; }
+    .load-sub { color: #666; font-size: 0.85rem; margin-bottom: 30px; font-weight: 600; letter-spacing: 0.1em; }
+    .load-bar { width: 300px; height: 6px; background: #222; border-radius: 3px; overflow: hidden; margin-bottom: 12px; }
+    .load-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #7b2ff7, #b388ff); border-radius: 3px; transition: width 0.3s; }
+    .load-percent { font-size: 0.9rem; color: #888; font-weight: 700; margin-bottom: 8px; }
+    .load-status { font-size: 0.8rem; color: #555; font-weight: 700; }
+    .load-tip { position: absolute; bottom: 40px; font-size: 0.75rem; color: #444; font-style: italic; }
+
+    /* ===== HUD (in-game) ===== */
+    #game-hud {
+      position: fixed; top: 0; left: 0; width: 100%; z-index: 50;
+      padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;
+      background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%);
+      pointer-events: none;
+    }
+    #game-hud.hidden { display: none; }
+    .hud-left { font-family: 'Fredoka One', cursive; font-size: 0.9rem; color: rgba(255,255,255,0.8); }
+    .hud-center { font-size: 0.75rem; color: rgba(255,255,255,0.5); font-weight: 600; }
+    .hud-right { pointer-events: auto; }
+    .hud-btn {
+      background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2);
+      color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem;
+      cursor: pointer; font-weight: 700; transition: all 0.2s;
+    }
+    .hud-btn:hover { background: rgba(123, 47, 247, 0.4); border-color: #7b2ff7; }
+
+    /* Camera view buttons */
+    .cam-btn {
+      background: rgba(0,0,0,0.7); border: 1px solid rgba(138, 43, 226, 0.3);
+      color: #fff; padding: 8px 14px; border-radius: 8px; font-size: 0.75rem;
+      cursor: pointer; font-weight: 700; transition: all 0.2s;
+      backdrop-filter: blur(4px); font-family: 'Nunito', sans-serif;
+    }
+    .cam-btn:hover { background: rgba(123, 47, 247, 0.5); border-color: #7b2ff7; transform: translateY(-2px); }
+
+    /* TV Control Buttons */
+    .tv-ctrl-btn {
+      background: #2563eb; border: none; color: #fff; padding: 8px 14px;
+      border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;
+      transition: all 0.2s; font-family: 'Nunito', sans-serif;
+    }
+    .tv-ctrl-btn:hover { background: #3b82f6; transform: translateY(-1px); }
+
+    /* TV HUD Buttons */
+    .tv-hud-btn {
+      background: rgba(78,205,196,0.15); border: 1px solid rgba(78,205,196,0.3);
+      color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem;
+      font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: 'Nunito', sans-serif;
+    }
+    .tv-hud-btn:hover { background: rgba(78,205,196,0.3); border-color: #4ecdc4; }
+    .tv-off-btn { border-color: rgba(255,80,80,0.3); color: #ff5050; }
+    .tv-off-btn:hover { background: rgba(255,80,80,0.2); border-color: #ff5050; }
+
+    /* TV Embed Buttons */
+    .tv-embed-btn {
+      background: #2563eb; border: none; color: #fff; padding: 8px 16px;
+      border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;
+      font-family: 'Nunito', sans-serif; transition: all 0.2s;
+    }
+    .tv-embed-btn:hover { background: #3b82f6; transform: translateY(-1px); }
+
+    /* TV Video Card (unused - kept for reference) */
+
+    /* Notebook Spread (Book modal) */
+    .notebook-spread {
+      display: flex; min-height: 400px;
+    }
+    .notebook-page {
+      flex: 1; background: #f8f6f0; padding: 30px 28px;
+      position: relative; overflow: hidden;
+      font-family: 'Caveat', 'Comic Sans MS', cursive;
+    }
+    .notebook-page.left-page { border-radius: 8px 0 0 8px; }
+    .notebook-page.right-page { border-radius: 0 8px 8px 0; }
+    .notebook-spine-div {
+      width: 6px; background: linear-gradient(180deg, #8b7355, #6b5540, #8b7355);
+      box-shadow: inset 0 0 4px rgba(0,0,0,0.3);
+    }
+    .notebook-ruled {
+      position: absolute; inset: 0; pointer-events: none;
+      background: repeating-linear-gradient(
+        transparent, transparent 27px, #d4e3f5 27px, #d4e3f5 28px
+      );
+      opacity: 0.5;
+    }
+    .nb-title {
+      font-size: 1.3rem; color: #2a2a2a; margin-bottom: 4px;
+      font-style: italic; position: relative; z-index: 1;
+    }
+    .nb-date {
+      font-size: 0.8rem; color: #999; margin-bottom: 14px;
+      font-style: italic; position: relative; z-index: 1;
+    }
+    .nb-text {
+      font-size: 0.95rem; color: #333; line-height: 1.75;
+      margin-bottom: 6px; position: relative; z-index: 1;
+      font-style: italic;
+    }
+    .nb-photo-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+      margin-top: 10px; position: relative; z-index: 1;
+    }
+    .nb-photo-grid img {
+      width: 100%; height: 90px; object-fit: cover; border-radius: 6px;
+      border: 2px solid #e8e0d4; box-shadow: 1px 1px 4px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+    .nb-photo-grid img:hover { transform: scale(1.05); }
+    .nb-check {
+      font-size: 0.9rem; color: #333; line-height: 1.8;
+      position: relative; z-index: 1; font-style: italic;
+    }
+    .nb-ideas {
+      font-size: 0.85rem; color: #888; margin-top: 12px;
+      font-style: italic; position: relative; z-index: 1;
+    }
+    .nb-line {
+      font-size: 0.85rem; color: #ccc; position: relative; z-index: 1;
+    }
+    @media (max-width: 600px) {
+      .notebook-spread { flex-direction: column; }
+      .notebook-spine-div { width: 100%; height: 4px; }
+      .notebook-page.left-page { border-radius: 8px 8px 0 0; }
+      .notebook-page.right-page { border-radius: 0 0 8px 8px; }
+    }
+
+    /* TV Embed Video Card */
+    .tv-embed-card {
+      width: 180px; height: 140px; border-radius: 12px; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      border: 3px solid transparent; transition: all 0.3s;
+    }
+    .tv-embed-card:hover { border-color: #4ecdc4; transform: scale(1.08); box-shadow: 0 0 20px rgba(78,205,196,0.4); }
+    .tv-embed-card .ecard-play { font-size: 28px; margin-bottom: 8px; background: rgba(255,255,255,0.9); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #333; }
+    .tv-embed-card .ecard-title { font-size: 13px; font-weight: 700; color: #fff; text-align: center; }
+
+
+
+    /* ===== INTERACTION PROMPT ===== */
+    #interact-prompt {
+      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.8); border: 1px solid rgba(138, 43, 226, 0.4);
+      padding: 10px 20px; border-radius: 8px; font-size: 0.85rem;
+      font-weight: 700; z-index: 50; backdrop-filter: blur(4px);
+      display: none; white-space: nowrap;
+    }
+    #interact-prompt .key { 
+      background: #7b2ff7; padding: 2px 8px; border-radius: 4px; 
+      margin-right: 6px; font-size: 0.75rem;
+    }
+
+    /* ===== MODALS ===== */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 80;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      animation: fadeIn 0.3s ease;
+    }
+    .modal-overlay.hidden { display: none; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    
+    .modal-box {
+      background: #1a1a2e; border: 1px solid rgba(138, 43, 226, 0.3);
+      border-radius: 16px; width: 90%; max-width: 600px; max-height: 80vh;
+      overflow-y: auto; animation: modalPop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    @keyframes modalPop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    
+    .modal-head {
+      padding: 14px 20px; background: linear-gradient(135deg, #7b2ff7, #9b59b6);
+      border-radius: 16px 16px 0 0; display: flex; justify-content: space-between; align-items: center;
+      font-family: 'Fredoka One', cursive; font-size: 0.95rem;
+    }
+    .modal-close {
+      background: none; border: none; color: #fff; font-size: 1.5rem;
+      cursor: pointer; width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .modal-close:hover { background: rgba(255,255,255,0.2); }
+    .modal-body { padding: 24px; }
+    .modal-body p { margin-bottom: 12px; line-height: 1.7; color: #ccc; font-size: 0.95rem; }
+
+
+
+    /* Gallery modal */
+    .gallery-frame { 
+      background: #111; border-radius: 8px; overflow: hidden; 
+      margin-bottom: 12px; position: relative; min-height: 200px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .gallery-frame img { max-width: 100%; max-height: 300px; object-fit: contain; }
+    .gallery-frame .no-photo { color: #555; font-size: 0.85rem; }
+    .gallery-controls { display: flex; gap: 8px; justify-content: center; align-items: center; }
+    .gallery-btn {
+      background: #7b2ff7; border: none; color: #fff; padding: 8px 16px;
+      border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+    .gallery-btn:hover { background: #9b59b6; }
+    .gallery-counter { color: #888; font-size: 0.8rem; font-weight: 700; min-width: 60px; text-align: center; }
+
+    /* Spotify-style modal */
+    .spotify-modal { background: #121212; }
+    .spotify-head { background: linear-gradient(135deg, #1db954, #158a3e); }
+    .spotify-body { padding: 0; }
+    .spotify-header { padding: 20px; display: flex; align-items: center; gap: 16px; background: linear-gradient(180deg, rgba(29,185,84,0.3), transparent); }
+    .spotify-cover { width: 80px; height: 80px; background: #333; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 2rem; }
+    .spotify-info h3 { font-size: 1.2rem; margin-bottom: 2px; }
+    .spotify-info p { font-size: 0.8rem; color: #888; }
+    .spotify-play-btn { background: #1db954; border: none; color: #fff; width: 40px; height: 40px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; margin-left: auto; }
+    .spotify-tracks { padding: 0 20px 20px; }
+    .spotify-track { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #282828; gap: 12px; cursor: pointer; transition: background 0.2s; border-radius: 4px; padding-left: 8px; }
+    .spotify-track:hover { background: #282828; }
+    .track-num { color: #888; font-size: 0.85rem; width: 20px; }
+    .track-title { flex: 1; font-size: 0.9rem; font-weight: 600; }
+    .track-dur { color: #888; font-size: 0.8rem; }
+
+    /* Calendar modal */
+    .cal-display { text-align: center; }
+    .cal-month { background: #e2231a; color: #fff; padding: 8px; font-family: 'Fredoka One', cursive; font-size: 1.1rem; border-radius: 8px 8px 0 0; }
+    .cal-grid { background: #fff; color: #333; padding: 16px; border-radius: 0 0 8px 8px; }
+    .cal-grid table { width: 100%; border-collapse: collapse; }
+    .cal-grid th { font-size: 0.7rem; color: #999; padding: 4px; }
+    .cal-grid td { padding: 6px; text-align: center; font-size: 0.8rem; font-weight: 600; }
+    .cal-grid .highlight { background: #f5cd30; border-radius: 50%; color: #333; }
+    .cal-note { margin-top: 16px; font-size: 0.85rem; color: #888; text-align: center; }
+
+    /* Mobile */
+    @media (max-width: 600px) {
+      .menu-container { flex-direction: column; gap: 20px; }
+      .menu-banner h1 { font-size: 1.5rem; }
+      .menu-banner .menu-art { font-size: 3.5rem; }
+      .modal-box { width: 95%; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Canvas for Three.js -->
+  <div id="canvas-container"></div>
+
+  <!-- TV Gallery HUD (appears when TV shows gallery) -->
+  <div id="tv-gallery-hud" style="display:none;position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:60;background:rgba(0,0,0,0.8);backdrop-filter:blur(8px);border:1px solid rgba(78,205,196,0.3);border-radius:10px;padding:10px 20px;align-items:center;gap:12px;">
+    <span style="font-family:'Fredoka One',cursive;font-size:0.8rem;color:#4ecdc4;">📺 Video Gallery</span>
+    <button class="tv-hud-btn" onclick="tvPrevVideo()">◀ Prev</button>
+    <button class="tv-hud-btn" style="background:rgba(78,205,196,0.3);border-color:#4ecdc4;" onclick="tvSelectPlay()">▶ Play</button>
+    <button class="tv-hud-btn" onclick="tvNextVideo()">Next ▶</button>
+    <button class="tv-hud-btn tv-off-btn" onclick="turnOffTV()">⏻ Off</button>
+  </div>
+
+  <!-- TV Controls HUD (appears when TV is playing video) -->
+  <div id="tv-controls-hud" style="display:none;position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:60;background:rgba(0,0,0,0.8);backdrop-filter:blur(8px);border:1px solid rgba(78,205,196,0.3);border-radius:10px;padding:10px 20px;align-items:center;gap:12px;">
+    <span id="tv-hud-title" style="font-family:'Fredoka One',cursive;font-size:0.8rem;color:#4ecdc4;min-width:120px;">📺 Video</span>
+    <button class="tv-hud-btn" onclick="tvPrevVideo()">⏮</button>
+    <button class="tv-hud-btn" id="tv-hud-pause" onclick="tvTogglePause()">⏸ Pause</button>
+    <button class="tv-hud-btn" onclick="tvNextVideo()">⏭</button>
+    <button class="tv-hud-btn" onclick="tvBackToGallery()">📋 Gallery</button>
+    <button class="tv-hud-btn tv-off-btn" onclick="turnOffTV()">⏻ Off</button>
+  </div>
+
+  <!-- Main Menu -->
+  <div id="main-menu">
+    <div class="menu-container">
+      <div class="menu-banner">
+        <div class="menu-art">🎓</div>
+        <h1>HALIMAH'S ROOM</h1>
+        <p>3D Experience</p>
+      </div>
+      <div class="menu-panel">
+        <h2>Main Menu</h2>
+        <button class="menu-btn primary" id="btn-play">▶ PLAY GAME</button>
+        <button class="menu-btn" id="btn-help">ℹ️ Help</button>
+        <button class="menu-btn" id="btn-credits">💜 Credits</button>
+        <p class="menu-hint">🎮 Press ENTER to start your adventure</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Screen -->
+  <div id="loading-screen" class="hidden">
+    <div class="load-title">HALIMAH'S ROOM</div>
+    <div class="load-sub">3D Experience</div>
+    <div class="load-bar"><div class="load-bar-fill" id="load-fill"></div></div>
+    <div class="load-percent" id="load-percent">0%</div>
+    <div class="load-status" id="load-status">Initializing...</div>
+    <div class="load-tip">Tip: Click objects in the room to interact</div>
+  </div>
+
+  <!-- Game HUD -->
+  <div id="game-hud" class="hidden">
+    <div class="hud-left">🎓 Halimah's Room</div>
+    <div class="hud-center">Drag to look around • Click objects to interact</div>
+    <div class="hud-right"><button class="hud-btn" id="btn-menu">☰ Menu</button></div>
+  </div>
+
+  <!-- Camera View Buttons -->
+  <div id="camera-views" class="hidden" style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:50;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+    <button class="cam-btn" onclick="moveCameraTo('overview')">🏠 Overview</button>
+    <button class="cam-btn" onclick="moveCameraTo('desk')">💻 Desk</button>
+    <button class="cam-btn" onclick="moveCameraTo('tv')">📺 TV</button>
+    <button class="cam-btn" onclick="moveCameraTo('bookshelf')">📚 Books</button>
+  </div>
+
+  <!-- Interaction Prompt -->
+  <div id="interact-prompt"><span class="key">CLICK</span> <span id="prompt-text">Click to interact</span></div>
+
+  <!-- Laptop macOS Overlay -->
+  <div id="laptop-overlay" class="laptop-overlay">
+    <button class="laptop-close" onclick="closeLaptop()">✕</button>
+    <div class="macos-window">
+      <div class="macos-menubar">
+        <span class="menubar-app">&#63743; Finder</span>
+        <span class="menubar-item">File</span>
+        <span class="menubar-item">Edit</span>
+        <span class="menubar-item">View</span>
+        <span class="menubar-item">Go</span>
+        <span class="menubar-item">Window</span>
+        <span class="menubar-item">Help</span>
+        <span class="menubar-time" id="macos-time">Thu 14:30</span>
+      </div>
+      <div class="macos-desktop" id="macos-desktop">
+        <!-- Dock -->
+        <div class="macos-dock">
+          <div class="dock-icon" onclick="openApp('photos')">
+            <svg viewBox="0 0 120 120" width="32" height="32">
+              <defs>
+                <linearGradient id="photos-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color:#fff"/>
+                  <stop offset="100%" style="stop-color:#f0f0f0"/>
+                </linearGradient>
+              </defs>
+              <rect width="120" height="120" rx="26" fill="url(#photos-bg)"/>
+              <ellipse cx="60" cy="52" rx="14" ry="22" fill="#f44336" transform="rotate(0 60 60)"/>
+              <ellipse cx="60" cy="52" rx="14" ry="22" fill="#ff9800" transform="rotate(45 60 60)"/>
+              <ellipse cx="60" cy="52" rx="14" ry="22" fill="#ffeb3b" transform="rotate(90 60 60)"/>
+              <ellipse cx="60" cy="52" rx="14" ry="22" fill="#4caf50" transform="rotate(135 60 60)"/>
+              <ellipse cx="60" cy="52" rx="14" ry="22" fill="#2196f3" transform="rotate(180 60 60)"/>
+              <ellipse cx="60" cy="52" rx="14" ry="22" fill="#3f51b5" transform="rotate(225 60 60)"/>
+              <ellipse cx="60" cy="52" rx="14" ry="22" fill="#9c27b0" transform="rotate(270 60 60)"/>
+              <ellipse cx="60" cy="52" rx="14" ry="22" fill="#e91e63" transform="rotate(315 60 60)"/>
+            </svg>
+            <span class="dock-label">Photos</span>
+          </div>
+          <div class="dock-icon" onclick="openApp('spotify')">
+            <svg viewBox="0 0 120 120" width="32" height="32">
+              <rect width="120" height="120" rx="26" fill="#1db954"/>
+              <circle cx="60" cy="60" r="38" fill="none"/>
+              <path d="M38 48c14-3 30-2 44 5" stroke="#000" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.8"/>
+              <path d="M42 60c11-2 24-1 36 4" stroke="#000" stroke-width="4.5" fill="none" stroke-linecap="round" opacity="0.8"/>
+              <path d="M45 72c9-2 20-1 30 3" stroke="#000" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.8"/>
+            </svg>
+            <span class="dock-label">Spotify</span>
+          </div>
+          <div class="dock-icon" onclick="openApp('safari')">
+            <svg viewBox="0 0 120 120" width="32" height="32">
+              <defs>
+                <linearGradient id="safari-bg" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" style="stop-color:#5ac8fa"/>
+                  <stop offset="100%" style="stop-color:#007aff"/>
+                </linearGradient>
+              </defs>
+              <rect width="120" height="120" rx="26" fill="url(#safari-bg)"/>
+              <circle cx="60" cy="60" r="38" fill="none" stroke="#fff" stroke-width="2.5"/>
+              <polygon points="60,28 72,54 60,60 48,54" fill="#fff"/>
+              <polygon points="60,92 48,66 60,60 72,66" fill="#fff"/>
+              <polygon points="60,28 72,54 60,60" fill="#f44336"/>
+              <polygon points="60,92 48,66 60,60" fill="#f44336"/>
+              <circle cx="60" cy="60" r="3" fill="#fff"/>
+            </svg>
+            <span class="dock-label">Safari</span>
+          </div>
+        </div>
+
+        <!-- Photos App -->
+        <div class="app-window photos-app" id="app-photos">
+          <div class="app-header">
+            <div class="traffic-lights">
+              <div class="traffic-light tl-red" onclick="closeApp('photos')"></div>
+              <div class="traffic-light tl-yellow"></div>
+              <div class="traffic-light tl-green"></div>
+            </div>
+            <span class="app-title">Photos</span>
+            <div class="app-tabs">
+              <span class="app-tab">Years</span>
+              <span class="app-tab">Months</span>
+              <span class="app-tab active">Days</span>
+              <span class="app-tab">All Photos</span>
+            </div>
+          </div>
+          <div style="display:flex;flex:1;overflow:hidden;">
+            <div class="photos-sidebar">
+              <h4>Photos</h4>
+              <div class="photos-sidebar-item active">📷 Library</div>
+              <div class="photos-sidebar-item">❤️ Favorites</div>
+              <div class="photos-sidebar-item">🕐 Recently Saved</div>
+              <h4>Collections</h4>
+              <div class="photos-sidebar-item">📅 Days</div>
+              <div class="photos-sidebar-item">🐾 People & Pets</div>
+            </div>
+            <div class="photos-content">
+              <div class="photos-date">Graduation Day <span>Memories with Halimah</span></div>
+              <div class="photos-grid" id="photos-grid"></div>
+            </div>
+          </div>
+          <!-- Photo Viewer -->
+          <div class="photo-viewer" id="photo-viewer">
+            <div class="photo-viewer-header">
+              <div class="app-header" style="background:transparent;border:none;">
+                <div class="traffic-lights">
+                  <div class="traffic-light tl-red" onclick="closePhotoViewer()"></div>
+                  <div class="traffic-light tl-yellow"></div>
+                  <div class="traffic-light tl-green"></div>
+                </div>
+              </div>
+              <div class="photo-viewer-info" id="photo-viewer-info"></div>
+              <div></div>
+            </div>
+            <img id="photo-viewer-img" src="" alt="">
+            <button class="photo-viewer-nav prev" onclick="viewerPrev()">◀</button>
+            <button class="photo-viewer-nav next" onclick="viewerNext()">▶</button>
+          </div>
+        </div>
+
+        <!-- Spotify App -->
+        <div class="app-window spotify-app" id="app-spotify">
+          <div class="app-header" style="background:#000;">
+            <div class="traffic-lights">
+              <div class="traffic-light tl-red" onclick="closeApp('spotify')"></div>
+              <div class="traffic-light tl-yellow"></div>
+              <div class="traffic-light tl-green"></div>
+            </div>
+            <span class="app-title">Spotify</span>
+          </div>
+          <div class="spotify-layout">
+            <div class="spotify-sidebar">
+              <div class="spotify-sidebar-item active">🏠 Home</div>
+              <div class="spotify-sidebar-item">🔍 Browse</div>
+              <div class="spotify-sidebar-item">⏭ Radio</div>
+              <h4>Your Library</h4>
+              <div class="spotify-sidebar-item">Made For You</div>
+              <div class="spotify-sidebar-item">Recently Played</div>
+              <div class="spotify-sidebar-item">Liked Songs</div>
+              <div class="spotify-sidebar-item">Albums</div>
+              <div class="spotify-sidebar-item">Artists</div>
+              <div class="spotify-sidebar-item">Podcasts</div>
+            </div>
+            <div class="spotify-main">
+              <div class="spotify-hero">
+                <div class="spotify-cover"><img src="assets/images/halimahrch_-20260514-0001_045.jpg" alt="Album Cover" style="width:100%;height:100%;object-fit:cover;border-radius:4px;"></div>
+                <div class="spotify-album-info">
+                  <p style="font-size:10px;color:#888;">2026</p>
+                  <h2>Last Voyage</h2>
+                  <p>Graduation Playlist • Halimah</p>
+                  <div class="spotify-actions">
+                    <button class="spotify-play-btn" id="spotify-play-btn2" onclick="toggleSpotifyPlay()">▶</button>
+                    <button class="spotify-follow-btn">FOLLOW</button>
+                  </div>
+                </div>
+              </div>
+              <div class="spotify-tracklist" id="spotify-tracklist2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modals -->
+  <div class="modal-overlay hidden" id="modal-message">
+    <div class="modal-box" style="max-width:780px;background:transparent;border:none;box-shadow:none;overflow:visible;">
+      <button class="modal-close" style="position:absolute;top:8px;right:8px;z-index:10;background:#333;border:1px solid #555;">&times;</button>
+      <div class="notebook-spread">
+        <div class="notebook-page left-page">
+          <div class="notebook-ruled"></div>
+          <h3 class="nb-title">Congratulations on your graduation, Halimah! ✨</h3>
+          <p class="nb-date">May 13, 2026</p>
+          <p class="nb-text">You did it! Cheers to your success! 🎓</p>
+          <p class="nb-text">No more deadlines, no more stress, just happiness and success!</p>
+          <p class="nb-text">Best wishes for your future, Halimah!</p>
+        </div>
+        <div class="notebook-spine-div"></div>
+        <div class="notebook-page right-page">
+          <div class="notebook-ruled"></div>
+          <h3 class="nb-title">Your Memories 📸</h3>
+          <div class="nb-photo-grid">
+            <img src="assets/images/halimahrch_-20260514-0001_007.jpg" alt="Memory">
+            <img src="assets/images/halimahrch_-20260514-0001_023.jpg" alt="Memory">
+            <img src="assets/images/halimahrch_-20260514-0001_056.jpg" alt="Memory">
+            <img src="assets/images/halimahrch_-20260514-0001_089.jpg" alt="Memory">
+            <img src="assets/images/halimahrch_-20260514-0001_112.jpg" alt="Memory">
+            <img src="assets/images/halimahrch_-20260514-0001_135.jpg" alt="Memory">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Laptop Photo Gallery Modal -->
+  <div class="modal-overlay hidden" id="modal-laptop-gallery">
+    <div class="modal-box">
+      <div class="modal-head"><span>💻 Photo Gallery</span><button class="modal-close">&times;</button></div>
+      <div class="modal-body">
+        <div class="gallery-frame" id="gallery-frame"><span class="no-photo">Add photos in config.js</span></div>
+        <p id="gallery-caption" style="text-align:center;color:#888;font-size:0.85rem;margin-bottom:12px;"></p>
+        <div class="gallery-controls">
+          <button class="gallery-btn" id="gal-prev">⏮ Previous</button>
+          <span class="gallery-counter" id="gal-counter">0 / 0</span>
+          <button class="gallery-btn" id="gal-next">⏭ Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay hidden" id="modal-spotify">
+    <div class="modal-box spotify-modal">
+      <div class="modal-head spotify-head"><span>🎵 My Playlist</span><button class="modal-close">&times;</button></div>
+      <div class="modal-body spotify-body">
+        <div class="spotify-header">
+          <div class="spotify-cover"><img src="assets/images/halimahrch_-20260514-0001_045.jpg" alt="Album Cover" style="width:100%;height:100%;object-fit:cover;border-radius:4px;"></div>
+          <div class="spotify-info"><p>2024</p><h3>Our Memories</h3><p>Graduation Playlist</p></div>
+          <button class="spotify-play-btn" id="spotify-play">▶</button>
+        </div>
+        <div class="spotify-tracks" id="spotify-tracks"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay hidden" id="modal-calendar">
+    <div class="modal-box">
+      <div class="modal-head"><span>📅 Hari Spesial</span><button class="modal-close">&times;</button></div>
+      <div class="modal-body">
+        <div class="cal-display">
+          <div class="cal-month">GRADUATION DAY</div>
+          <div class="cal-grid">
+            <table>
+              <tr><th>MIN</th><th>SEN</th><th>SEL</th><th>RAB</th><th>KAM</th><th>JUM</th><th>SAB</th></tr>
+              <tr><td></td><td></td><td></td><td></td><td></td><td>1</td><td>2</td></tr>
+              <tr><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td></tr>
+              <tr><td>10</td><td>11</td><td>12</td><td class="highlight">13</td><td>14</td><td>15</td><td>16</td></tr>
+              <tr><td>17</td><td>18</td><td>19</td><td>20</td><td>21</td><td>22</td><td>23</td></tr>
+              <tr><td>24</td><td>25</td><td>26</td><td>27</td><td>28</td><td>29</td><td>30</td></tr>
+              <tr><td>31</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            </table>
+          </div>
+        </div>
+        <p class="cal-note">🎓 The day all your hard work paid off. Congratulations, Halimah!</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
+  </script>
+  <script type="module" src="js/room-3d.js"></script>
+</body>
+</html>
